@@ -19,32 +19,43 @@ def isMotionDetected(frame1, frame2) :
         return True
     return False
 
-
 def main():
     cap = cv2.VideoCapture(0)
     width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
     height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
     fps = 10
-
-    filename = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
-    videoWriter = cv2.VideoWriter('basicvideo.mp4', cv2.VideoWriter_fourcc(*'mp4v'), fps, (width,height))
-
     _, prevFrame = cap.read();
 
+    recording = False
+    noMotionTimes = 0;
+    videoWriter = None
     while True:
         _, frame= cap.read()
-        a = isMotionDetected(frame, prevFrame)
-        print(a);
+        isMotion = isMotionDetected(frame, prevFrame)
 
+        if isMotion == True and recording == False:
+            print("motion detected!");
+            recording = True
+            filename = "video-" + datetime.now().strftime("%Y%m%d-%H%M%S") + ".mp4"
+            videoWriter = cv2.VideoWriter("capturedVideos/" + filename, cv2.VideoWriter_fourcc(*'mp4v'), fps, (width, height))
 
-        videoWriter.write(frame)
-        prevFrame = frame;
+        if noMotionTimes >= fps * 5: 
+            recording = False;
+            videoWriter.release()
+            noMotionTimes = 0;
+
+        if recording:
+            if isMotion :
+                noMotionTimes = 0
+            else :
+                noMotionTimes += 1
+
+            videoWriter.write(frame)
+            prevFrame = frame;
 
     cap.release()
-    writer.release()
+    videoWriter.release()
 
-
-if __name__ == "__main__"  :
+if __name__ == "__main__" :
     main()
 
