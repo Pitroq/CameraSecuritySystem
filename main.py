@@ -1,7 +1,6 @@
 import cv2
 from datetime import datetime
 import numpy as np
-from configparser import ConfigParser
 import time
 
 def getDifference(frame1, frame2) :
@@ -39,6 +38,11 @@ def getConfig() :
 
     return config
 
+def boolean(string):
+    if string.lower() == "true":
+        return True
+    return False
+
 def main():
     config = getConfig()
     cap = cv2.VideoCapture(int(config["cameraId"]))
@@ -50,9 +54,26 @@ def main():
     recording = False
     noMotionFrames = 0;
     videoWriter = None
-    isArmed = True
+    isArmed = boolean(config["isArmed"])
+    
+    if isArmed:
+        print("camera is armed")
+    else:
+        print("camera is unarmed")
+
     while True:
-        
+        config = getConfig()
+        configIsArmed = boolean(config["isArmed"])
+        if configIsArmed != isArmed :
+            if isArmed :
+                videoWriter.release()
+                
+            isArmed = configIsArmed
+            if isArmed:
+                print("camera is armed")
+            else:
+                print("camera is unarmed")
+
         if (not isArmed) :
             time.sleep(10)
             continue;
