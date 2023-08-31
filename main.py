@@ -15,7 +15,9 @@ def getDifference(frame1, frame2) :
 
 def isMotionDetected(frame1, frame2) :
     diff = getDifference(frame1, frame2)
-    if (diff > 0.1) :
+    # print(diff)
+    if (diff > 0.14) :
+        print(diff)
         return True
     return False
 
@@ -27,7 +29,7 @@ def main():
     _, prevFrame = cap.read();
 
     recording = False
-    noMotionTimes = 0;
+    noMotionFrames = 0;
     videoWriter = None
     while True:
         _, frame= cap.read()
@@ -38,17 +40,18 @@ def main():
             recording = True
             filename = "video-" + datetime.now().strftime("%Y%m%d-%H%M%S") + ".mp4"
             videoWriter = cv2.VideoWriter("capturedVideos/" + filename, cv2.VideoWriter_fourcc(*'mp4v'), fps, (width, height))
+            videoWriter.write(prevFrame)
 
-        if noMotionTimes >= fps * 5: 
+        if noMotionFrames >= fps * 5: 
             recording = False;
             videoWriter.release()
-            noMotionTimes = 0;
+            noMotionFrames = 0;
 
         if recording:
             if isMotion :
-                noMotionTimes = 0
+                noMotionFrames = 0
             else :
-                noMotionTimes += 1
+                noMotionFrames += 1
 
             videoWriter.write(frame)
             prevFrame = frame;
