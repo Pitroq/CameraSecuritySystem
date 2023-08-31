@@ -1,6 +1,8 @@
 import cv2
 from datetime import datetime
 import numpy as np
+from configparser import ConfigParser
+import time
 
 def getDifference(frame1, frame2) :
     absDiff = cv2.absdiff(frame1, frame2)
@@ -15,34 +17,57 @@ def getDifference(frame1, frame2) :
 
 def isMotionDetected(frame1, frame2) :
     diff = getDifference(frame1, frame2)
-    # print(diff)
-    if (diff > 0.14) :
-        print(diff)
+    config = getConfig()
+    if (diff > config["minPercentOfDifferenceToDetectMotion"]) :
         return True
     return False
 
+def getConfig() :
+    config = {}
+    with open('config.cfg') as fp:
+        for line in fp :
+            if line.startswith('#'):
+                continue
+            key, val = line.strip().split('=')
+            
+            try :
+                val = float(val)
+            except:
+                pass
+
+            config[key] = val
+
+    return config
+
 def main():
-    cap = cv2.VideoCapture(0)
+    config = getConfig()
+    cap = cv2.VideoCapture(int(config["cameraId"]))
     width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
     height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-    fps = 10
+    fps = config["fps"]
     _, prevFrame = cap.read();
 
     recording = False
     noMotionFrames = 0;
     videoWriter = None
+    isArmed = True
     while True:
+        
+        if (not isArmed) :
+            time.sleep(10)
+            continue;
+
         _, frame= cap.read()
         isMotion = isMotionDetected(frame, prevFrame)
 
-        if isMotion == True and recording == False:
+        if isMotion and not recording:
             print("motion detected!");
             recording = True
             filename = "video-" + datetime.now().strftime("%Y%m%d-%H%M%S") + ".mp4"
             videoWriter = cv2.VideoWriter("capturedVideos/" + filename, cv2.VideoWriter_fourcc(*'mp4v'), fps, (width, height))
             videoWriter.write(prevFrame)
 
-        if noMotionFrames >= fps * 5: 
+        if noMotionFrames >= fps * config["noMotionSecondsNumberToEndRecording"]: 
             recording = False;
             videoWriter.release()
             noMotionFrames = 0;
