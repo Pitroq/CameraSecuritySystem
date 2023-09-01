@@ -3,7 +3,7 @@ from datetime import datetime
 import numpy as np
 import time
 
-def getDifference(frame1, frame2) :
+def getDifference(frame1, frame2):
     absDiff = cv2.absdiff(frame1, frame2)
     grayDiff = cv2.cvtColor(absDiff, cv2.COLOR_BGR2GRAY)
     _, threshold = cv2.threshold(grayDiff, 30, 255, cv2.THRESH_BINARY)
@@ -14,22 +14,20 @@ def getDifference(frame1, frame2) :
     percentDifference = (nonZeroPixels / totalPixels) * 100
     return percentDifference
 
-def isMotionDetected(frame1, frame2) :
+def isMotionDetected(frame1, frame2):
     diff = getDifference(frame1, frame2)
     config = getConfig()
-    if (diff > config["minPercentOfDifferenceToDetectMotion"]) :
-        return True
-    return False
+    return diff > config["minPercentOfDifferenceToDetectMotion"]
 
-def getConfig() :
+def getConfig():
     config = {}
-    with open('config.cfg') as fp:
-        for line in fp :
+    with open('config.cfg') as file:
+        for line in file:
             if line.startswith('#'):
                 continue
-            key, val = line.strip().split('=')
             
-            try :
+            key, val = line.strip().split('=')
+            try:
                 val = float(val)
             except:
                 pass
@@ -39,9 +37,7 @@ def getConfig() :
     return config
 
 def boolean(string):
-    if string.lower() == "true":
-        return True
-    return False
+    return string.lower() == "true"
 
 def main():
     config = getConfig()
@@ -54,6 +50,8 @@ def main():
     recording = False
     noMotionFrames = 0;
     videoWriter = None
+    videoFormat = cv2.VideoWriter_fourcc(*"mp4v")
+
     isArmed = boolean(config["isArmed"])
     
     if isArmed:
@@ -65,7 +63,7 @@ def main():
         config = getConfig()
         configIsArmed = boolean(config["isArmed"])
         if configIsArmed != isArmed :
-            if isArmed :
+            if isArmed:
                 videoWriter.release()
                 
             isArmed = configIsArmed
@@ -74,7 +72,7 @@ def main():
             else:
                 print("camera is unarmed")
 
-        if (not isArmed) :
+        if not isArmed:
             time.sleep(10)
             continue;
 
@@ -85,7 +83,7 @@ def main():
             print("motion detected!");
             recording = True
             filename = "video-" + datetime.now().strftime("%Y%m%d-%H%M%S") + ".mp4"
-            videoWriter = cv2.VideoWriter("capturedVideos/" + filename, cv2.VideoWriter_fourcc(*'mp4v'), fps, (width, height))
+            videoWriter = cv2.VideoWriter("capturedVideos/" + filename, videoFormat, fps, (width, height))
             videoWriter.write(prevFrame)
 
         if noMotionFrames >= fps * config["noMotionSecondsNumberToEndRecording"]: 
@@ -94,17 +92,17 @@ def main():
             noMotionFrames = 0;
 
         if recording:
-            if isMotion :
-                noMotionFrames = 0
-            else :
-                noMotionFrames += 1
-
             videoWriter.write(frame)
             prevFrame = frame;
+
+            if isMotion:
+                noMotionFramer = 0
+            else:
+                noMotionFrames += 1
 
     cap.release()
     videoWriter.release()
 
-if __name__ == "__main__" :
+if __name__ == "__main__":
     main()
 
