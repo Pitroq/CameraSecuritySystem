@@ -21,7 +21,7 @@ def isMotionDetected(frame1, frame2):
 
 def getConfig():
     config = {}
-    with open('config.cfg') as file:
+    with open("/home/peter/CameraSecuritySystem/config.cfg") as file:
         for line in file:
             if line.startswith('#'):
                 continue
@@ -83,7 +83,7 @@ def main():
             print("motion detected!");
             recording = True
             filename = "video-" + datetime.now().strftime("%Y%m%d-%H%M%S") + ".mp4"
-            videoWriter = cv2.VideoWriter("capturedVideos/" + filename, videoFormat, fps, (width, height))
+            videoWriter = cv2.VideoWriter("/home/peter/CameraSecuritySystem/capturedVideos/" + filename, videoFormat, fps, (width, height))
             videoWriter.write(prevFrame)
 
         if noMotionFrames >= fps * config["noMotionSecondsNumberToEndRecording"]: 
